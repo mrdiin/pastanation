@@ -6,23 +6,17 @@ export class GameOver extends Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor(0xff0000)
+    this.add.text(300, 100, "Game Over!", {
+      fontSize: "32px",
+      color: "#ff0000",
+    })
 
-    this.add.image(512, 384, "background").setAlpha(0.5)
+    const restartButton = this.add
+      .text(350, 300, "Play Again", { fontSize: "20px", color: "#fff" })
+      .setInteractive()
 
-    this.add
-      .text(512, 384, "Game Over", {
-        fontFamily: "Arial Black",
-        fontSize: 64,
-        color: "#ffffff",
-        stroke: "#000000",
-        strokeThickness: 8,
-        align: "center",
-      })
-      .setOrigin(0.5)
-
-    this.input.once("pointerdown", () => {
-      this.scene.start("MainMenu")
+    restartButton.on("pointerdown", () => {
+      this.scene.start("MainMenu") // Go back to Main Menu
     })
   }
 }
