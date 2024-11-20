@@ -4,14 +4,14 @@ export class MainMenu extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("background", "assets/bg.png")
-    this.load.image("title", "assets/title.png")
-    this.load.image("level1", "assets/fettuccine.png")
-    this.load.image("level2", "assets/farfalle.png")
-    this.load.image("level3", "assets/rigatoni.png")
-    this.load.image("level4", "assets/ravioli.png")
-    this.load.image("lock", "assets/lock.png")
-    this.load.image("title-bg", "assets/title-bg.png")
+    this.load.image("background", "/pastanation/assets/bg.png")
+    this.load.image("title", "/pastanation/assets/title.png")
+    this.load.image("level1", "/pastanation/assets/fettuccine.png")
+    this.load.image("level2", "/pastanation/assets/farfalle.png")
+    this.load.image("level3", "/pastanation/assets/rigatoni.png")
+    this.load.image("level4", "/pastanation/assets/ravioli.png")
+    this.load.image("lock", "/pastanation/assets/lock.png")
+    this.load.image("title-bg", "/pastanation/assets/title-bg.png")
   }
 
   create() {

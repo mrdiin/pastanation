@@ -33,7 +33,7 @@ jobs:
         run: npm ci
         
       - name: Build
-        run: npm run build:ghp
+        run: npm run build-ghp
         
       - name: Setup Pages
         uses: actions/configure-pages@v4

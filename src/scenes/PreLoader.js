@@ -4,16 +4,16 @@ export class Preloader extends Phaser.Scene {
   }
 
   preload() {
-    this.load.audio("hover", "assets/sound-effects/hover.wav")
-    this.load.audio("start", "assets/sound-effects/start.wav")
-    this.load.audio("select", "assets/sound-effects/select.wav")
-    this.load.audio("bgm", "assets/sound-effects/bgm.mp3")
-    this.load.audio("wrongOption", "assets/sound-effects/wrong-option.wav")
-    this.load.audio("sparkle", "assets/sound-effects/sparkle.wav")
+    this.load.audio("hover", "/pastanation/assets/sound-effects/hover.wav")
+    this.load.audio("start", "/pastanation/assets/sound-effects/start.wav")
+    this.load.audio("select", "/pastanation/assets/sound-effects/select.wav")
+    this.load.audio("bgm", "/pastanation/assets/sound-effects/bgm.mp3")
+    this.load.audio("wrongOption", "/pastanation/assets/sound-effects/wrong-option.wav")
+    this.load.audio("sparkle", "/pastanation/assets/sound-effects/sparkle.wav")
 
-    this.load.image("soundIcon", "assets/headphones.png")
-    this.load.image("muteIcon", "assets/mute.png")
-    this.load.image("plank", "assets/plank.png")
+    this.load.image("soundIcon", "/pastanation/assets/headphones.png")
+    this.load.image("muteIcon", "/pastanation/assets/mute.png")
+    this.load.image("plank", "/pastanation/assets/plank.png")
   }
 
   create() {
