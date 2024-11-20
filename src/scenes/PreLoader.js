@@ -9,6 +9,7 @@ export class Preloader extends Phaser.Scene {
     this.load.audio("select", "assets/sound-effects/select.wav")
     this.load.audio("bgm", "assets/sound-effects/bgm.mp3")
     this.load.audio("wrongOption", "assets/sound-effects/wrong-option.wav")
+    this.load.audio("sparkle", "assets/sound-effects/sparkle.wav")
 
     this.load.image("soundIcon", "assets/headphones.png")
     this.load.image("muteIcon", "assets/mute.png")
