@@ -4,7 +4,7 @@ export class Level1IntroStep1 extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("kitchen", "assets/level-1/kitchen-bg.png")
+    this.load.image("woodBg", "assets/level-1/bg.png")
     this.load.image("nextButton", "assets/next-button.png")
     this.load.image("dialogueBg", "assets/dialogue-bg.png")
 
@@ -19,7 +19,7 @@ export class Level1IntroStep1 extends Phaser.Scene {
 
     this.dialogueSound = this.sound.add("dialogue1")
 
-    const bg = this.add.image(0, 0, "kitchen")
+    const bg = this.add.image(0, 0, "woodBg")
     bg.setOrigin(0, 0)
     bg.setDisplaySize(this.sys.game.config.width, this.sys.game.config.height)
 

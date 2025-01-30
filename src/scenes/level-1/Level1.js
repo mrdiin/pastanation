@@ -8,9 +8,10 @@ export class Level1 extends Phaser.Scene {
     this.load.image("choppingBoard", "assets/level-1/chopping-board.png")
     this.load.image("clipboard", "assets/clipboard.png")
     this.load.image("flour", "assets/level-1/flour.png")
+    this.load.image("flourMound", "assets/level-1/flour-mound.png")
     this.load.image("flourEggOne", "assets/level-1/flour-egg-one.png")
     this.load.image("flourEggTwo", "assets/level-1/flour-egg-two.png")
-    this.load.image("flourJar", "assets/level-1/flour-jar.png")
+    this.load.image("flourJarBase", "assets/level-1/flour-jar-base.png")
     this.load.image("saltJar", "assets/level-1/salt-jar.png")
     this.load.image("semolinaJar", "assets/level-1/semolina-jar.png")
     this.load.image("oliveOil", "assets/level-1/olive-oil.png")
@@ -32,16 +33,20 @@ export class Level1 extends Phaser.Scene {
     this.load.image("slice2", "assets/sliced-dough/2.png")
     this.load.image("slice3", "assets/sliced-dough/3.png")
     this.load.image("slice4", "assets/sliced-dough/4.png")
+    this.load.image("toastBg", "assets/level-1/toast-bg.png")
 
     this.load.spritesheet("kneading", "assets/kneading-sprites/sprite.png", {
       frameWidth: 1000,
       frameHeight: 1000,
     })
 
-    this.load.spritesheet("grandma", "assets/level-1/grandma.png", {
-      frameWidth: 1125,
-      frameHeight: 1125,
+    this.load.spritesheet("flourJar", "assets/level-1/flour-jar.png", {
+      frameWidth: 1000,
+      frameHeight: 1000,
     })
+
+    this.load.audio("step-1", "assets/level-1/dialogues/step-1-edited.mp3")
+    this.load.audio("step-2", "assets/level-1/dialogues/step-2-edited.mp3")
   }
 
   create() {
@@ -53,22 +58,12 @@ export class Level1 extends Phaser.Scene {
     this.setChoppingBoard()
     this.setItems()
     this.setInstructions()
-    this.showToast("Welcome to the game!", 2000)
 
-    this.handleFirstStep()
+    this.currentStep = 0
+    this.placeFlour()
   }
 
   markStepCompleted() {
-    const graphics = this.add.graphics()
-    graphics.fillStyle(0x00ff00, 1)
-
-    graphics.fillRect(
-      this.cameras.main.width - 490,
-      this.cameras.main.height / 2 + 50 * this.currentStep - 165,
-      30,
-      30
-    )
-
     this.currentStep++
   }
 
@@ -95,10 +90,10 @@ export class Level1 extends Phaser.Scene {
         scale: 0.2,
         origin: { x: 0, y: 0 },
       },
-      flourJar: {
+      flourJarBase: {
         x: 0,
         y: 400,
-        key: "flourJar",
+        key: "flourJarBase",
         scale: 0.22,
         origin: { x: 0, y: 0 },
       },
@@ -139,6 +134,7 @@ export class Level1 extends Phaser.Scene {
     })
 
     this.setEggs()
+    this.setFlourJar()
   }
 
   setEggs() {
@@ -156,9 +152,32 @@ export class Level1 extends Phaser.Scene {
     }
   }
 
-  handleFirstStep() {
+  setFlourJar() {
+    this.items.flourJar = this.add
+      .sprite(-70, 320, "flourJar")
+      .setOrigin(0, 0)
+      .setScale(0.6)
+      .setDepth(2)
+      .setInteractive()
+    this.items.flourJar.preFX.addShadow()
+
+    this.anims.create({
+      key: "flourJar",
+      frames: this.anims.generateFrameNumbers("flourJar", {
+        start: 0,
+        end: 11,
+      }),
+      frameRate: 20,
+      repeat: -1,
+    })
+  }
+
+  placeFlour() {
     const { x, y } = this.items.flourJar
-    this.showToast("Select the flour and drag it to the main area", 10000)
+    this.showToast(
+      "First, we make the dough. Take some flour—just a nice mound on the table.",
+      "step-1"
+    )
     this.input.setDraggable(this.items["flourJar"])
 
     this.items.flourJar.on("drag", (pointer, dragX, dragY) => {
@@ -178,11 +197,12 @@ export class Level1 extends Phaser.Scene {
         this.currentStep === 0
       ) {
         this.selectSound.play()
+        this.items.flourJar.play("flourJar")
         this.currentStepObj = this.add
           .image(
-            this.cameras.main.width / 2 + 20,
-            this.cameras.main.height / 2 + 20,
-            "flour"
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2,
+            "flourMound"
           )
           .setOrigin(0.5, 0.5)
           .setInteractive()
@@ -195,33 +215,87 @@ export class Level1 extends Phaser.Scene {
           targets: this.currentStepObj,
           alpha: { from: 0, to: 1 },
           scale: { from: 0, to: 500 / this.currentStepObj.width },
-          duration: 1000,
+          duration: 3000,
           ease: "Power0",
           yoyo: false,
           repeat: 0,
 
           onComplete: () => {
             this.markStepCompleted()
-            this.handleSecondStep()
+            this.makeWellInFlour()
+            this.items.flourJar.anims.stop()
+            this.items.flourJar.setFrame(0)
+            this.tweens.add({
+              targets: this.items.flourJar,
+              x,
+              y,
+              duration: 500,
+              ease: "Power0",
+              yoyo: false,
+              repeat: 0,
+            })
           },
         })
 
         this.addSparkle(
-          this.cameras.main.width / 2 + 20,
-          this.cameras.main.height / 2 + 20
+          this.cameras.main.width / 2,
+          this.cameras.main.height / 2
         )
       } else {
         this.wrongOption.play()
       }
-      this.tweens.add({
-        targets: this.items.flourJar,
-        x,
-        y,
-        duration: 500,
-        ease: "Power0",
-        yoyo: false,
-        repeat: 0,
-      })
+    })
+  }
+
+  makeWellInFlour() {
+    this.showToast(
+      "Now, make a little well in the middle. Like a tiny volcano! Perfect for cracking the eggs into. Don’t be shy, now!",
+      "step-2"
+    )
+
+    let graphics = this.add.graphics()
+    graphics.lineStyle(4, 0x47261e)
+    const circle = graphics
+      .strokeCircle(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2,
+        100
+      )
+      .setDepth(2)
+      .setInteractive()
+
+    this.tweens.add({
+      targets: circle,
+      alpha: { from: 0.4, to: 1 },
+      duration: 1000,
+      ease: "Power0",
+      yoyo: true,
+      repeat: -1,
+    })
+
+    let circleHitArea = this.add
+      .circle(this.cameras.main.width / 2, this.cameras.main.height / 2, 100)
+      .setDepth(2)
+      .setInteractive()
+
+    circleHitArea.on("pointerdown", () => {
+      this.currentStepObj.destroy()
+      this.currentStepObj = this.add
+        .image(
+          this.cameras.main.width / 2,
+          this.cameras.main.height / 2,
+          "flour"
+        )
+        .setOrigin(0.5, 0.5)
+        .setInteractive()
+
+      this.currentStepObj.setScale(500 / this.currentStepObj.width)
+
+      this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
+      graphics.clear()
+      this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
+      circleHitArea.destroy()
+      this.handleSecondStep()
     })
   }
 
@@ -238,25 +312,15 @@ export class Level1 extends Phaser.Scene {
   }
 
   setInstructions() {
-    this.anims.create({
-      key: "grandma",
-      frames: this.anims.generateFrameNumbers("grandma", {
-        start: 0,
-        end: 8,
-      }),
-      frameRate: 3,
-      repeat: -1,
-    })
-    this.clipboard = this.add
+    this.nonna = this.add
       .sprite(
         this.cameras.main.width - 700,
         this.cameras.main.height - 300,
-        "grandma"
+        "grandmaSpeaking"
       )
       .setOrigin(0, 0.5)
-    this.clipboard.setScale(700 / this.clipboard.width)
-    this.clipboard.preFX.addShadow()
-    this.clipboard.play("grandma")
+    this.nonna.setScale(700 / this.nonna.width)
+    this.nonna.preFX.addShadow()
   }
 
   setBg() {
@@ -267,7 +331,9 @@ export class Level1 extends Phaser.Scene {
   }
 
   handleSecondStep() {
-    this.showToast("Select the egg and drag it to the main area", 10000)
+    this.showToast(
+      "Now, it’s time for the eggs! Crack the eggs gently, like you’re handling a newborn chick. No shell pieces, eh? We don’t want crunchy pasta!"
+    )
     let eggOutline = this.add
       .image(
         this.cameras.main.width / 2 - 20,
@@ -317,8 +383,8 @@ export class Level1 extends Phaser.Scene {
           if (eggsCracked === 0) {
             this.currentStepObj = this.add
               .image(
-                this.cameras.main.width / 2 + 20,
-                this.cameras.main.height / 2 + 20,
+                this.cameras.main.width / 2,
+                this.cameras.main.height / 2,
                 "flourEggOne"
               )
               .setOrigin(0.5, 0.5)
@@ -334,8 +400,8 @@ export class Level1 extends Phaser.Scene {
               0.5
             )
             this.addSparkle(
-              this.cameras.main.width / 2 + 20,
-              this.cameras.main.height / 2 + 20
+              this.cameras.main.width / 2,
+              this.cameras.main.height / 2
             )
             eggsCracked++
             eggOutline = this.add
@@ -360,8 +426,8 @@ export class Level1 extends Phaser.Scene {
             this.currentStepObj.destroy()
             this.currentStepObj = this.add
               .image(
-                this.cameras.main.width / 2 + 20,
-                this.cameras.main.height / 2 + 20,
+                this.cameras.main.width / 2,
+                this.cameras.main.height / 2,
                 "flourEggTwo"
               )
               .setOrigin(0.5, 0.5)
@@ -377,8 +443,8 @@ export class Level1 extends Phaser.Scene {
               0.5
             )
             this.addSparkle(
-              this.cameras.main.width / 2 + 20,
-              this.cameras.main.height / 2 + 20
+              this.cameras.main.width / 2,
+              this.cameras.main.height / 2
             )
             this.markStepCompleted()
             this.handleThirdStep()
@@ -398,7 +464,7 @@ export class Level1 extends Phaser.Scene {
   }
 
   handleThirdStep() {
-    this.showToast("Select the whisk and move it to whisk the eggs", 10000)
+    this.showToast("Select the whisk and move it to whisk the eggs")
     const spiral = this.add
       .image(
         this.cameras.main.width / 2,
@@ -428,10 +494,7 @@ export class Level1 extends Phaser.Scene {
 
     whisk.on("dragstart", (pointer) => {
       if (whiskingComplete) return
-      this.addSparkle(
-        this.cameras.main.width / 2 + 20,
-        this.cameras.main.height / 2 + 20
-      )
+      this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
     })
 
     whisk.on("drag", (pointer, dragX, dragY) => {
@@ -445,8 +508,8 @@ export class Level1 extends Phaser.Scene {
           lastX = dragX
           if (whiskCount % 4 === 0 && !whiskingComplete) {
             this.addSparkle(
-              this.cameras.main.width / 2 + 20,
-              this.cameras.main.height / 2 + 20
+              this.cameras.main.width / 2,
+              this.cameras.main.height / 2
             )
           }
         }
@@ -459,8 +522,8 @@ export class Level1 extends Phaser.Scene {
         this.currentStepObj.destroy()
         this.currentStepObj = this.add
           .image(
-            this.cameras.main.width / 2 + 20,
-            this.cameras.main.height / 2 + 20,
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2,
             "whiskedEggs"
           )
           .setOrigin(0.5, 0.5)
@@ -469,7 +532,7 @@ export class Level1 extends Phaser.Scene {
 
         this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
         spiral.destroy()
-        this.showToast("Whisking Completed!", 3000)
+        this.showToast("Whisking Completed!")
         this.markStepCompleted()
         this.handleFourthStep()
       }
@@ -489,7 +552,7 @@ export class Level1 extends Phaser.Scene {
   }
 
   handleFourthStep() {
-    this.showToast("Click on the flour to knead the dough", 5000)
+    this.showToast("Click on the flour to knead the dough")
 
     let kneadingStarted = false
     this.anims.create({
@@ -508,8 +571,8 @@ export class Level1 extends Phaser.Scene {
         this.currentStepObj.destroy()
         this.currentStepObj = this.add
           .sprite(
-            this.cameras.main.width / 2 + 20,
-            this.cameras.main.height / 2 + 20,
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2,
             "kneading"
           )
           .setOrigin(0.5, 0.5)
@@ -517,7 +580,7 @@ export class Level1 extends Phaser.Scene {
         this.currentStepObj.preFX.addShadow()
 
         this.currentStepObj.on("animationcomplete", (animation, frame) => {
-          this.showToast("Kneading Completed!", 3000)
+          this.showToast("Kneading Completed!")
           this.markStepCompleted()
           this.handleFifthStep()
         })
@@ -534,8 +597,8 @@ export class Level1 extends Phaser.Scene {
       this.currentStepObj.play("knead")
 
       this.add.particles(
-        this.cameras.main.width / 2 + 20,
-        this.cameras.main.height / 2 + 20,
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2,
         "flourParticle",
         {
           speed: 200,
@@ -623,14 +686,14 @@ export class Level1 extends Phaser.Scene {
         this.items.knife.y = pointer.y + 10
       }
     })
-    this.addSparkle()
+    this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
 
     this.input.on("pointerup", () => {
       isCutting = false
       lastPointerPosition = null
       cuts.push(cuttingLine)
       if (cuts.length === 2) {
-        this.showToast("Cutting Completed!", 3000)
+        this.showToast("Cutting Completed!")
         this.markStepCompleted()
         this.handleSeventhStep()
         cuts[0].destroy()
@@ -640,8 +703,8 @@ export class Level1 extends Phaser.Scene {
         for (let i = 0; i < 4; i++) {
           this.currentStepObj = this.add.group()
           const slice = this.add.image(
-            this.cameras.main.width / 2 + 20,
-            this.cameras.main.height / 2 + 20,
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2,
             "slice" + (i + 1)
           )
           slice.setOrigin(0.5, 0.5)
@@ -664,8 +727,8 @@ export class Level1 extends Phaser.Scene {
           })
           this.markStepCompleted()
           this.addSparkle(
-            this.cameras.main.width / 2 + 20,
-            this.cameras.main.height / 2 + 20
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2
           )
         }
 
@@ -690,7 +753,7 @@ export class Level1 extends Phaser.Scene {
   addSparkle(x, y, duration = 1000) {
     const sparkleSound = this.sound.add("sparkle")
     sparkleSound.play()
-    const sparkleEmitter = this.add.particles(x, y, "sparkle", {
+    this.add.particles(x, y, "sparkle", {
       angle: { min: -360, max: 360 },
       speed: 150,
       scaleX: 0.01,
@@ -700,58 +763,58 @@ export class Level1 extends Phaser.Scene {
     })
   }
 
-  showToast(message, duration = 2000) {
+  showToast(message, audioKey, onDialogueComplete, duration = 2000) {
     const toastBg = this.add
-      .rectangle(
-        this.cameras.main.centerX,
-        this.cameras.main.height - 100,
-        this.cameras.main.width - 500,
-        150,
-        0xe0ce8a,
-        1
-      )
+      .image(this.cameras.main.width - 300, 350, "toastBg")
+      .setScale(650 / this.cameras.main.width)
       .setDepth(100)
-      .setOrigin(0.5)
 
-    // Create the text object
     const toastText = this.add
-      .text(
-        this.cameras.main.centerX,
-        this.cameras.main.height - 100,
-        message,
-        {
-          fontSize: "28px",
-          color: "#000000",
-          fontFamily: "Handwriting",
-        }
-      )
+      .text(this.cameras.main.width - 500, 150, message, {
+        fontSize: "44px",
+        color: "#47261e",
+        fontFamily: "Handwriting",
+        wordWrap: { width: 420, useAdvancedWrap: true },
+      })
       .setDepth(100)
-      .setOrigin(0.5)
 
     const toastGroup = this.add.group([toastBg, toastText])
+    if (audioKey) {
+      this.dialogue?.stop()
+      this.dialogue = this.sound.add(audioKey)
+      this.dialogue.once("play", () => {
+        this.nonna.play("grandmaSpeaking")
+      })
+      this.dialogue.once("complete", () => {
+        this.nonna.anims.stop()
+        this.nonna.setFrame(0)
+        if (onDialogueComplete) {
+          onDialogueComplete()
+        }
+      })
+      this.dialogue.play({ volume: 10 })
+    }
 
-    toastGroup.setY(this.cameras.main.height)
-
-    this.tweens.add({
-      targets: toastGroup.getChildren(),
-      y: "-=100",
-      alpha: { from: 0, to: 1 },
-      duration: 300,
-      ease: "Power2",
-      onComplete: () => {
-        this.time.delayedCall(duration, () => {
-          this.tweens.add({
-            targets: toastGroup.getChildren(),
-            y: "+=100",
-            alpha: 0,
-            duration: 300,
-            ease: "Power2",
-            onComplete: () => {
-              toastGroup.destroy(true)
-            },
-          })
-        })
-      },
-    })
+    // this.tweens.add({
+    //   targets: toastGroup.getChildren(),
+    //   y: "-=0",
+    //   alpha: { from: 0, to: 1 },
+    //   duration: 300,
+    //   ease: "Power2",
+    //   onComplete: () => {
+    //     this.time.delayedCall(duration, () => {
+    //       this.tweens.add({
+    //         targets: toastGroup.getChildren(),
+    //         y: "+=0",
+    //         alpha: 0,
+    //         duration: 300,
+    //         ease: "Power2",
+    //         onComplete: () => {
+    //           toastGroup.destroy(true)
+    //         },
+    //       })
+    //     })
+    //   },
+    // })
   }
 }
