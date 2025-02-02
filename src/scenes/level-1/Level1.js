@@ -7,7 +7,7 @@ export class Level1 extends Phaser.Scene {
     this.load.image("level-1-bg", "assets/level-1/bg.png")
     this.load.image("choppingBoard", "assets/level-1/chopping-board.png")
     this.load.image("clipboard", "assets/clipboard.png")
-    this.load.image("flour", "assets/level-1/flour.png")
+    this.load.image("well", "assets/level-1/well.png")
     this.load.image("flourMound", "assets/level-1/flour-mound.png")
     this.load.image("flourEggOne", "assets/level-1/flour-egg-one.png")
     this.load.image("flourEggTwo", "assets/level-1/flour-egg-two.png")
@@ -17,9 +17,8 @@ export class Level1 extends Phaser.Scene {
     this.load.image("oliveOil", "assets/level-1/olive-oil.png")
     this.load.image("knife", "assets/level-1/knife.png")
     this.load.image("eggCarton", "assets/level-1/egg-carton.png")
-    this.load.image("egg", "assets/level-1/egg.png")
     this.load.image("eggOutline", "assets/level-1/egg-outline.png")
-    this.load.image("whisk", "assets/level-1/whisk.png")
+    this.load.image("fork", "assets/level-1/fork.png")
     this.load.image("whiskedEggs", "assets/level-1/whisked-eggs.png")
     this.load.image("napkin", "assets/level-1/napkin.png")
     this.load.image("tissues", "assets/level-1/tissues.png")
@@ -45,8 +44,18 @@ export class Level1 extends Phaser.Scene {
       frameHeight: 1000,
     })
 
+    this.load.spritesheet("egg", "assets/level-1/egg.png", {
+      frameWidth: 360,
+      frameHeight: 360,
+    })
+
+    this.load.audio("eggCracking", "assets/sound-effects/cracking-egg.mp3")
+
     this.load.audio("step-1", "assets/level-1/dialogues/step-1-edited.mp3")
     this.load.audio("step-2", "assets/level-1/dialogues/step-2-edited.mp3")
+    this.load.audio("step-3", "assets/level-1/dialogues/step-3-edited.mp3")
+    this.load.audio("step-4", "assets/level-1/dialogues/step-4-edited.mp3")
+    this.load.audio("step-5", "assets/level-1/dialogues/step-5-edited.mp3")
   }
 
   create() {
@@ -84,10 +93,10 @@ export class Level1 extends Phaser.Scene {
       napkin: { x: 200, y: 1050, key: "napkin", scale: 0.28 },
       semolinaJar: { x: 520, y: 400, key: "semolinaJar", scale: 0.12 },
       eggCarton: {
-        x: 10,
-        y: 10,
+        x: 30,
+        y: 30,
         key: "eggCarton",
-        scale: 0.2,
+        scale: 0.18,
         origin: { x: 0, y: 0 },
       },
       flourJarBase: {
@@ -100,7 +109,7 @@ export class Level1 extends Phaser.Scene {
       oliveOil: { x: 525, y: 130, key: "oliveOil", scale: 0.1 },
       tomatoes: { x: 200, y: 1050, key: "tomatoes", scale: 0.15 },
       basil: { x: 530, y: 1080, key: "basil", scale: 0.18 },
-      whisk: { x: 550, y: 690, key: "whisk", scale: 0.15 },
+      fork: { x: 550, y: 690, key: "fork", scale: 0.18 },
       knife: { x: 1150, y: 250, key: "knife", scale: 0.2 },
       tissues: { x: 775, y: 160, key: "tissues", scale: 0.15 },
       rollingPin: {
@@ -142,11 +151,22 @@ export class Level1 extends Phaser.Scene {
     for (let i = 0; i < 3; i++) {
       for (let j = 0; j < 3; j++) {
         const egg = this.add
-          .image(100 + i * 110, 100 + j * 100, "egg")
-          .setScale(0.09)
+          .sprite(100 + i * 110, 100 + j * 100, "egg")
+          .setScale(0.45)
           .setDepth(3)
           .setInteractive()
+
         egg.preFX.addShadow()
+
+        this.anims.create({
+          key: "egg",
+          frames: this.anims.generateFrameNumbers("egg", {
+            start: 0,
+            end: 8,
+          }),
+          frameRate: 15,
+          repeat: 0,
+        })
         this.items.eggs.push(egg)
       }
     }
@@ -167,7 +187,7 @@ export class Level1 extends Phaser.Scene {
         start: 0,
         end: 11,
       }),
-      frameRate: 20,
+      frameRate: 15,
       repeat: -1,
     })
   }
@@ -213,7 +233,6 @@ export class Level1 extends Phaser.Scene {
 
         this.tweens.add({
           targets: this.currentStepObj,
-          alpha: { from: 0, to: 1 },
           scale: { from: 0, to: 500 / this.currentStepObj.width },
           duration: 3000,
           ease: "Power0",
@@ -253,13 +272,14 @@ export class Level1 extends Phaser.Scene {
       "step-2"
     )
 
+    let clicks = 0
     let graphics = this.add.graphics()
     graphics.lineStyle(4, 0x47261e)
     const circle = graphics
       .strokeCircle(
         this.cameras.main.width / 2,
         this.cameras.main.height / 2,
-        100
+        110
       )
       .setDepth(2)
       .setInteractive()
@@ -274,28 +294,33 @@ export class Level1 extends Phaser.Scene {
     })
 
     let circleHitArea = this.add
-      .circle(this.cameras.main.width / 2, this.cameras.main.height / 2, 100)
+      .circle(this.cameras.main.width / 2, this.cameras.main.height / 2, 110)
       .setDepth(2)
       .setInteractive()
 
+    const widths = [300, 400, 500]
+
     circleHitArea.on("pointerdown", () => {
-      this.currentStepObj.destroy()
-      this.currentStepObj = this.add
+      this.well?.destroy()
+      this.well = this.add
         .image(
           this.cameras.main.width / 2,
           this.cameras.main.height / 2,
-          "flour"
+          "well"
         )
         .setOrigin(0.5, 0.5)
         .setInteractive()
 
-      this.currentStepObj.setScale(500 / this.currentStepObj.width)
-
-      this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
-      graphics.clear()
+      this.well.setScale(widths[clicks] / this.well.width)
       this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
-      circleHitArea.destroy()
-      this.handleSecondStep()
+      clicks++
+
+      if (clicks === 3) {
+        graphics.clear()
+
+        circleHitArea.destroy()
+        this.crackEggs()
+      }
     })
   }
 
@@ -330,17 +355,21 @@ export class Level1 extends Phaser.Scene {
     bg.preFX.addVignette(0.5, 0.5, 0.9, 0.5)
   }
 
-  handleSecondStep() {
+  crackEggs() {
     this.showToast(
-      "Now, it’s time for the eggs! Crack the eggs gently, like you’re handling a newborn chick. No shell pieces, eh? We don’t want crunchy pasta!"
+      "Now, it’s time for the eggs! Crack the eggs gently, like you’re handling a newborn chick. No shell pieces, eh? We don’t want crunchy pasta!",
+      "step-3"
     )
+
+    const crackingSound = this.sound.add("eggCracking")
+
     let eggOutline = this.add
       .image(
-        this.cameras.main.width / 2 - 20,
-        this.cameras.main.height / 2 + 30,
+        this.cameras.main.width / 2 - 30,
+        this.cameras.main.height / 2 + 10,
         "eggOutline"
       )
-      .setScale(0.09)
+      .setScale(0.08)
       .setInteractive()
 
     this.tweens.add({
@@ -368,6 +397,8 @@ export class Level1 extends Phaser.Scene {
         const object1Bounds = egg.getBounds()
         const object2Bounds = this.currentStepObj.getBounds()
 
+        crackingSound.play()
+
         if (
           Phaser.Geom.Intersects.RectangleToRectangle(
             object1Bounds,
@@ -375,80 +406,78 @@ export class Level1 extends Phaser.Scene {
           ) &&
           this.currentStep === 1
         ) {
-          egg.destroy()
-          eggOutline.destroy()
-          this.selectSound.play()
-
-          this.currentStepObj.destroy()
-          if (eggsCracked === 0) {
-            this.currentStepObj = this.add
-              .image(
-                this.cameras.main.width / 2,
-                this.cameras.main.height / 2,
-                "flourEggOne"
-              )
-              .setOrigin(0.5, 0.5)
-              .setInteractive()
-            this.currentStepObj.setScale(500 / this.currentStepObj.width)
-            this.currentStepObj.preFX.addShadow(
-              0,
-              0,
-              0.1,
-              1,
-              "0x000000",
-              6,
-              0.5
-            )
-            this.addSparkle(
-              this.cameras.main.width / 2,
-              this.cameras.main.height / 2
-            )
-            eggsCracked++
-            eggOutline = this.add
-              .image(
-                this.cameras.main.width / 2 + 50,
-                this.cameras.main.height / 2,
-                "eggOutline"
-              )
-              .setScale(0.09)
-              .setInteractive()
-
-            this.tweens.add({
-              targets: [eggOutline],
-              alpha: 0.2,
-              duration: 500,
-              ease: "Power0",
-              yoyo: true,
-              repeat: -1,
-            })
-          } else {
+          egg.play("egg")
+          egg.on("animationcomplete", () => {
+            egg.destroy()
             eggOutline.destroy()
+
             this.currentStepObj.destroy()
-            this.currentStepObj = this.add
-              .image(
-                this.cameras.main.width / 2,
-                this.cameras.main.height / 2,
-                "flourEggTwo"
+            if (eggsCracked === 0) {
+              this.currentStepObj = this.add
+                .image(
+                  this.cameras.main.width / 2,
+                  this.cameras.main.height / 2,
+                  "flourEggOne"
+                )
+                .setOrigin(0.5, 0.5)
+                .setInteractive()
+              this.currentStepObj.setScale(500 / this.currentStepObj.width)
+              this.currentStepObj.preFX.addShadow(
+                0,
+                0,
+                0.1,
+                1,
+                "0x000000",
+                6,
+                0.5
               )
-              .setOrigin(0.5, 0.5)
-              .setInteractive()
-            this.currentStepObj.setScale(500 / this.currentStepObj.width)
-            this.currentStepObj.preFX.addShadow(
-              0,
-              0,
-              0.1,
-              1,
-              "0x000000",
-              6,
-              0.5
-            )
-            this.addSparkle(
-              this.cameras.main.width / 2,
-              this.cameras.main.height / 2
-            )
-            this.markStepCompleted()
-            this.handleThirdStep()
-          }
+              eggsCracked++
+              eggOutline = this.add
+                .image(
+                  this.cameras.main.width / 2 + 40,
+                  this.cameras.main.height / 2 - 30,
+                  "eggOutline"
+                )
+                .setScale(0.08)
+                .setInteractive()
+
+              this.tweens.add({
+                targets: [eggOutline],
+                alpha: 0.2,
+                duration: 500,
+                ease: "Power0",
+                yoyo: true,
+                repeat: -1,
+              })
+            } else {
+              eggOutline.destroy()
+              this.currentStepObj.destroy()
+              this.currentStepObj = this.add
+                .image(
+                  this.cameras.main.width / 2,
+                  this.cameras.main.height / 2,
+                  "flourEggTwo"
+                )
+                .setOrigin(0.5, 0.5)
+                .setInteractive()
+              this.currentStepObj.setScale(500 / this.currentStepObj.width)
+              this.currentStepObj.preFX.addShadow(
+                0,
+                0,
+                0.1,
+                1,
+                "0x000000",
+                6,
+                0.5
+              )
+              this.addSparkle(
+                this.cameras.main.width / 2,
+                this.cameras.main.height / 2
+              )
+              this.markStepCompleted()
+              this.whiskEggs()
+            }
+          })
         } else {
           this.wrongOption.play()
           this.tweens.add({
@@ -463,8 +492,12 @@ export class Level1 extends Phaser.Scene {
     })
   }
 
-  handleThirdStep() {
-    this.showToast("Select the whisk and move it to whisk the eggs")
+  whiskEggs() {
+    this.well.destroy()
+    this.showToast(
+      "Ah, look at that—beautiful! Now, use your fork to gently mix the eggs.",
+      "step-4"
+    )
     const spiral = this.add
       .image(
         this.cameras.main.width / 2,
@@ -483,24 +516,24 @@ export class Level1 extends Phaser.Scene {
       repeat: -1,
     })
 
-    const whisk = this.items["whisk"]
-    const { x, y } = whisk
+    const fork = this.items["fork"]
+    const { x, y } = fork
 
-    this.input.setDraggable(whisk)
+    this.input.setDraggable(fork)
 
     let lastX = null
     let whiskCount = 0
     let whiskingComplete = false
 
-    whisk.on("dragstart", (pointer) => {
+    fork.on("dragstart", (pointer) => {
       if (whiskingComplete) return
       this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
     })
 
-    whisk.on("drag", (pointer, dragX, dragY) => {
+    fork.on("drag", (pointer, dragX, dragY) => {
       if (this.currentStep !== 2) return
-      whisk.x = dragX
-      whisk.y = dragY
+      fork.x = dragX
+      fork.y = dragY
 
       if (lastX !== null) {
         if (Math.abs(dragX - lastX) > 100) {
@@ -538,11 +571,11 @@ export class Level1 extends Phaser.Scene {
       }
     })
 
-    whisk.on("dragend", () => {
+    fork.on("dragend", () => {
       lastX = null
 
       this.tweens.add({
-        targets: whisk,
+        targets: fork,
         x,
         y,
         duration: 500,
@@ -552,7 +585,10 @@ export class Level1 extends Phaser.Scene {
   }
 
   handleFourthStep() {
-    this.showToast("Click on the flour to knead the dough")
+    this.showToast(
+      "Time to get your hands dirty! Knead the dough like it owes you rent! Push, fold, and turn. Feel it! It should be smooth like a bambino’s cheek.",
+      "step-5"
+    )
 
     let kneadingStarted = false
     this.anims.create({
@@ -787,7 +823,7 @@ export class Level1 extends Phaser.Scene {
       })
       this.dialogue.once("complete", () => {
         this.nonna.anims.stop()
-        this.nonna.setFrame(0)
+        this.nonna.setFrame(1)
         if (onDialogueComplete) {
           onDialogueComplete()
         }
