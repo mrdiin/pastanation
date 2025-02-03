@@ -39,6 +39,6 @@ export class Preloader extends Phaser.Scene {
 
     const bgm = this.sound.add("bgm")
     bgm.play({ loop: true, volume: 0.3 })
-    this.scene.start("MainMenu")
+    this.scene.start("Level1")
   }
 }

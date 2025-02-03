@@ -20,7 +20,6 @@ export class Level1 extends Phaser.Scene {
     this.load.image("eggOutline", "assets/level-1/egg-outline.png")
     this.load.image("fork", "assets/level-1/fork.png")
     this.load.image("whiskedEggs", "assets/level-1/whisked-eggs.png")
-    this.load.image("napkin", "assets/level-1/napkin.png")
     this.load.image("tissues", "assets/level-1/tissues.png")
     this.load.image("tomatoes", "assets/level-1/tomatoes.png")
     this.load.image("basil", "assets/level-1/basil.png")
@@ -66,6 +65,11 @@ export class Level1 extends Phaser.Scene {
       frameHeight: 360,
     })
 
+    this.load.spritesheet("napkin", "assets/level-1/napkin.png", {
+      frameWidth: 540,
+      frameHeight: 540,
+    })
+
     this.load.audio("eggCracking", "assets/sound-effects/cracking-egg.mp3")
 
     this.load.audio("step-1", "assets/level-1/dialogues/step-1-edited.mp3")
@@ -73,6 +77,8 @@ export class Level1 extends Phaser.Scene {
     this.load.audio("step-3", "assets/level-1/dialogues/step-3-edited.mp3")
     this.load.audio("step-4", "assets/level-1/dialogues/step-4-edited.mp3")
     this.load.audio("step-5", "assets/level-1/dialogues/step-5-edited.mp3")
+    this.load.audio("step-6", "assets/level-1/dialogues/step-6-edited.mp3")
+    this.load.audio("step-7", "assets/level-1/dialogues/step-7-edited.mp3")
   }
 
   create() {
@@ -107,7 +113,6 @@ export class Level1 extends Phaser.Scene {
 
     this.items = {
       saltJar: { x: 1050, y: 110, key: "saltJar", scale: 0.09 },
-      napkin: { x: 200, y: 1050, key: "napkin", scale: 0.28 },
       semolinaJar: { x: 520, y: 400, key: "semolinaJar", scale: 0.12 },
       eggCarton: {
         x: 30,
@@ -124,7 +129,6 @@ export class Level1 extends Phaser.Scene {
         origin: { x: 0, y: 0 },
       },
       oliveOil: { x: 525, y: 130, key: "oliveOil", scale: 0.1 },
-      tomatoes: { x: 200, y: 1050, key: "tomatoes", scale: 0.15 },
       basil: { x: 530, y: 1080, key: "basil", scale: 0.18 },
       fork: { x: 550, y: 690, key: "fork", scale: 0.18 },
       knife: { x: 1150, y: 250, key: "knife", scale: 0.2 },
@@ -160,6 +164,7 @@ export class Level1 extends Phaser.Scene {
     })
 
     this.setEggs()
+    this.setNapkin()
     this.setFlourJar()
   }
 
@@ -187,6 +192,26 @@ export class Level1 extends Phaser.Scene {
         this.items.eggs.push(egg)
       }
     }
+  }
+
+  setNapkin() {
+    this.items.napkin = this.add
+      .sprite(200, 1050, "napkin")
+      .setOrigin(0.5, 0.5)
+      .setScale(0.8)
+      .setDepth(2)
+      .setInteractive()
+    this.items.napkin.preFX.addShadow()
+
+    this.anims.create({
+      key: "napkin",
+      frames: this.anims.generateFrameNumbers("napkin", {
+        start: 0,
+        end: 3,
+      }),
+      frameRate: 8,
+      repeat: 0,
+    })
   }
 
   setFlourJar() {
@@ -888,7 +913,100 @@ export class Level1 extends Phaser.Scene {
 
   restDough() {
     this.showToast(
-      "Bravo! You kneaded that dough like a true pasta master! But listen, even dough needs a little nap. If you try to roll it out now, it will fight back like a stubborn mule!"
+      "Bravo! You kneaded that dough like a true pasta master! But listen, even dough needs a little nap. If you try to roll it out now, it will fight back like a stubborn mule!",
+      "step-6",
+      () => {
+        this.showToast(
+          "Wrap it up nice and cozy, let it rest for at least 30 minutes. This gives the gluten time to relax—just like you should!",
+          "step-7"
+        )
+      }
+    )
+
+    const napkin = this.items.napkin
+    const { x, y } = napkin
+
+    this.input.setDraggable(napkin)
+
+    napkin.on("drag", (pointer, dragX, dragY) => {
+      napkin.x = dragX
+      napkin.y = dragY
+    })
+
+    napkin.on("dragend", () => {
+      const object1Bounds = this.items.napkin.getBounds()
+      const object2Bounds = this.choppingBoard.getBounds()
+
+      if (
+        Phaser.Geom.Intersects.RectangleToRectangle(
+          object1Bounds,
+          object2Bounds
+        )
+      ) {
+        this.selectSound.play()
+        this.items.napkin.play("napkin")
+        this.currentStepObj.destroy()
+
+        this.addSparkle(
+          this.cameras.main.width / 2,
+          this.cameras.main.height / 2
+        )
+
+        this.time.delayedCall(5000, () => {
+          this.anims.create({
+            key: "reverseNapkin",
+            frames: this.anims.generateFrameNumbers("napkin", {
+              start: 3,
+              end: 0,
+            }),
+            frameRate: 10,
+            repeat: 0,
+          })
+
+          this.items.napkin.play("reverseNapkin")
+
+          this.items.napkin.on("animationcomplete", () => {
+            this.currentStepObj = this.add
+              .image(
+                this.cameras.main.width / 2,
+                this.cameras.main.height / 2,
+                "dough6"
+              )
+              .setOrigin(0.5, 0.5)
+              .setInteractive()
+
+            this.currentStepObj.setScale(500 / this.currentStepObj.width)
+
+            this.currentStepObj.preFX.addShadow(
+              0,
+              0,
+              0.1,
+              1,
+              "0x000000",
+              6,
+              0.5
+            )
+
+            this.tweens.add({
+              targets: this.items.napkin,
+              x: 200,
+              y: 1050,
+              duration: 500,
+              ease: "Power2",
+            })
+          })
+
+          this.rollDough()
+        })
+      } else {
+        this.wrongOption.play()
+      }
+    })
+  }
+
+  rollDough() {
+    this.showToast(
+      "Now, the real fun begins! Grab your rolling pin. Roll the dough out nice and thin—like a sheet of paper."
     )
   }
 
