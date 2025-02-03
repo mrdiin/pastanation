@@ -33,11 +33,23 @@ export class Level1 extends Phaser.Scene {
     this.load.image("slice3", "assets/sliced-dough/3.png")
     this.load.image("slice4", "assets/sliced-dough/4.png")
     this.load.image("toastBg", "assets/level-1/toast-bg.png")
+    this.load.image("arrow", "assets/level-1/arrow.png")
+    this.load.image("clockwiseArrow", "assets/level-1/clockwise-arrow.png")
+    this.load.image(
+      "antiClockwiseArrow",
+      "assets/level-1/anticlockwise-arrow.png"
+    )
     this.load.image("crackedEggs1", "assets/level-1/cracked-eggs-1.png")
     this.load.image("crackedEggs2", "assets/level-1/cracked-eggs-2.png")
     this.load.image("crackedEggs3", "assets/level-1/cracked-eggs-3.png")
     this.load.image("crackedEggs4", "assets/level-1/cracked-eggs-4.png")
     this.load.image("crackedEggs5", "assets/level-1/cracked-eggs-5.png")
+    this.load.image("dough1", "assets/level-1/dough-1.png")
+    this.load.image("dough2", "assets/level-1/dough-2.png")
+    this.load.image("dough3", "assets/level-1/dough-3.png")
+    this.load.image("dough4", "assets/level-1/dough-4.png")
+    this.load.image("dough5", "assets/level-1/dough-5.png")
+    this.load.image("dough6", "assets/level-1/dough-6.png")
 
     this.load.spritesheet("kneading", "assets/kneading-sprites/sprite.png", {
       frameWidth: 1000,
@@ -539,9 +551,8 @@ export class Level1 extends Phaser.Scene {
 
       if (whiskCount === 21 && !whiskingComplete) {
         whiskingComplete = true
-        this.showToast("Whisking Completed!")
         this.markStepCompleted()
-        this.handleFourthStep()
+        this.kneadDough()
       }
     })
 
@@ -558,67 +569,355 @@ export class Level1 extends Phaser.Scene {
     })
   }
 
-  handleFourthStep() {
+  kneadDough() {
     this.showToast(
       "Time to get your hands dirty! Knead the dough like it owes you rent! Push, fold, and turn. Feel it! It should be smooth like a bambino’s cheek.",
       "step-5"
     )
 
-    let kneadingStarted = false
-    this.anims.create({
-      key: "knead",
-      frames: this.anims.generateFrameNumbers("kneading", {
-        start: 0,
-        end: 15,
-      }),
-      frameRate: 5,
-      repeat: 0,
+    this.kneadDown()
+  }
+
+  kneadDown() {
+    const arrows = this.add.group()
+    const coords = [-100, 0, 100]
+    for (let c of coords) {
+      let arrow = this.add
+        .image(
+          this.cameras.main.width / 2 + c,
+          this.cameras.main.height / 2,
+          "arrow"
+        )
+        .setOrigin(0.5, 0.5)
+        .setInteractive()
+      arrow.setScale(300 / arrow.width)
+      arrows.add(arrow)
+    }
+
+    let startX, startY, endX, endY
+    let downSwipes = 0
+
+    this.input.on("pointerdown", (pointer) => {
+      startX = pointer.x
+      startY = pointer.y
     })
 
-    this.currentStepObj.on("pointerdown", () => {
-      if (!kneadingStarted) {
-        kneadingStarted = true
-        this.currentStepObj.destroy()
-        this.currentStepObj = this.add
-          .sprite(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 2,
-            "kneading"
-          )
-          .setOrigin(0.5, 0.5)
-        this.currentStepObj.setScale(400 / this.currentStepObj.width)
-        this.currentStepObj.preFX.addShadow()
+    this.input.on("pointerup", (pointer) => {
+      endX = pointer.x
+      endY = pointer.y
 
-        this.currentStepObj.on("animationcomplete", (animation, frame) => {
-          this.showToast("Kneading Completed!")
-          this.markStepCompleted()
-          this.handleFifthStep()
-        })
-
-        this.currentStepObj.on("pointerup", () => {
-          this.time.delayedCall(500, () => {
-            if (kneadingStarted) {
-              this.currentStepObj.stop("knead")
-            }
-          })
-        })
+      if (this.detectSwipe(startX, startY, endX, endY, "down")) {
+        downSwipes++
+        this.addSparkle(
+          this.cameras.main.width / 2,
+          this.cameras.main.height / 2
+        )
+        let firstArrow = arrows.getFirstAlive()
+        if (firstArrow) {
+          firstArrow.destroy()
+          arrows.remove(firstArrow)
+        }
+        if (downSwipes === 3) {
+          arrows.clear(true, true)
+          this.input.removeListener("pointerdown")
+          this.input.removeListener("pointerup")
+          this.kneadRight()
+        }
       }
+    })
+  }
 
-      this.currentStepObj.play("knead")
-
-      this.add.particles(
+  kneadRight() {
+    this.currentStepObj.destroy()
+    this.currentStepObj = this.add
+      .image(
         this.cameras.main.width / 2,
         this.cameras.main.height / 2,
-        "flourParticle",
-        {
-          speed: 200,
-          scaleX: 0.005,
-          scaleY: 0.005,
-          lifespan: 500,
-          duration: 500,
-        }
+        "dough1"
       )
+      .setOrigin(0.5, 0.5)
+      .setInteractive()
+
+    this.currentStepObj.setScale(500 / this.currentStepObj.width)
+
+    this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
+
+    const arrows = this.add.group()
+    const coords = [-100, 0, 100]
+    for (let c of coords) {
+      let arrow = this.add
+        .image(
+          this.cameras.main.width / 2,
+          this.cameras.main.height / 2 + c,
+          "arrow"
+        )
+        .setAngle(-90)
+        .setOrigin(0.5, 0.5)
+        .setInteractive()
+      arrow.setScale(300 / arrow.width)
+      arrows.add(arrow)
+    }
+
+    let startX, startY, endX, endY
+    let rightSwipes = 0
+
+    this.input.on("pointerdown", (pointer) => {
+      startX = pointer.x
+      startY = pointer.y
     })
+
+    this.input.on("pointerup", (pointer) => {
+      endX = pointer.x
+      endY = pointer.y
+
+      if (this.detectSwipe(startX, startY, endX, endY, "right")) {
+        rightSwipes++
+        this.addSparkle(
+          this.cameras.main.width / 2,
+          this.cameras.main.height / 2
+        )
+        let firstArrow = arrows.getFirstAlive()
+        if (firstArrow) {
+          firstArrow.destroy()
+          arrows.remove(firstArrow)
+        }
+        if (rightSwipes === 3) {
+          arrows.clear(true, true)
+          this.input.removeListener("pointerdown")
+          this.input.removeListener("pointerup")
+          this.kneadClockwise()
+        }
+      }
+    })
+  }
+
+  kneadClockwise() {
+    this.currentStepObj.destroy()
+    this.currentStepObj = this.add
+      .image(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2,
+        "dough2"
+      )
+      .setOrigin(0.5, 0.5)
+      .setInteractive()
+
+    this.currentStepObj.setScale(500 / this.currentStepObj.width)
+
+    this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
+    this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
+    const arrow = this.add
+      .image(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2,
+        "clockwiseArrow"
+      )
+      .setAngle(-90)
+      .setOrigin(0.5, 0.5)
+      .setInteractive()
+    arrow.setScale(300 / arrow.width)
+
+    let startX, startY, endX, endY
+
+    this.input.on("pointerdown", (pointer) => {
+      startX = pointer.x
+      startY = pointer.y
+    })
+
+    this.input.on("pointerup", (pointer) => {
+      endX = pointer.x
+      endY = pointer.y
+
+      if (this.detectSwipe(startX, startY, endX, endY, "up")) {
+        arrow.destroy()
+        this.input.removeListener("pointerdown")
+        this.input.removeListener("pointerup")
+        this.kneadAntiClockwise()
+      }
+    })
+  }
+
+  kneadAntiClockwise() {
+    this.currentStepObj.destroy()
+    this.currentStepObj = this.add
+      .image(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2,
+        "dough3"
+      )
+      .setOrigin(0.5, 0.5)
+      .setInteractive()
+
+    this.currentStepObj.setScale(500 / this.currentStepObj.width)
+
+    this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
+    this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
+    const arrow = this.add
+      .image(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2,
+        "antiClockwiseArrow"
+      )
+      .setAngle(-90)
+      .setOrigin(0.5, 0.5)
+      .setInteractive()
+    arrow.setScale(300 / arrow.width)
+
+    let startX, startY, endX, endY
+
+    this.input.on("pointerdown", (pointer) => {
+      startX = pointer.x
+      startY = pointer.y
+    })
+
+    this.input.on("pointerup", (pointer) => {
+      endX = pointer.x
+      endY = pointer.y
+
+      if (this.detectSwipe(startX, startY, endX, endY, "up")) {
+        arrow.destroy()
+        this.input.removeListener("pointerdown")
+        this.input.removeListener("pointerup")
+        this.kneadUp()
+      }
+    })
+  }
+
+  kneadUp() {
+    this.currentStepObj.destroy()
+    this.currentStepObj = this.add
+      .image(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2,
+        "dough4"
+      )
+      .setOrigin(0.5, 0.5)
+      .setInteractive()
+
+    this.currentStepObj.setScale(500 / this.currentStepObj.width)
+
+    this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
+    this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
+
+    const arrow = this.add
+      .image(this.cameras.main.width / 2, this.cameras.main.height / 2, "arrow")
+      .setOrigin(0.5, 0.5)
+      .setAngle(-180)
+      .setInteractive()
+    arrow.setScale(300 / arrow.width)
+
+    let startX, startY, endX, endY
+
+    this.input.on("pointerdown", (pointer) => {
+      startX = pointer.x
+      startY = pointer.y
+    })
+
+    this.input.on("pointerup", (pointer) => {
+      endX = pointer.x
+      endY = pointer.y
+
+      if (this.detectSwipe(startX, startY, endX, endY, "up")) {
+        arrow.destroy()
+        this.input.removeListener("pointerdown")
+        this.input.removeListener("pointerup")
+        this.kneadDownAgain()
+      }
+    })
+  }
+
+  kneadDownAgain() {
+    this.currentStepObj.destroy()
+    this.currentStepObj = this.add
+      .image(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2,
+        "dough5"
+      )
+      .setOrigin(0.5, 0.5)
+      .setInteractive()
+
+    this.currentStepObj.setScale(500 / this.currentStepObj.width)
+
+    this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
+    this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
+    const arrow = this.add
+      .image(this.cameras.main.width / 2, this.cameras.main.height / 2, "arrow")
+      .setOrigin(0.5, 0.5)
+      .setInteractive()
+    arrow.setScale(300 / arrow.width)
+
+    let startX, startY, endX, endY
+
+    this.input.on("pointerdown", (pointer) => {
+      startX = pointer.x
+      startY = pointer.y
+    })
+
+    this.input.on("pointerup", (pointer) => {
+      endX = pointer.x
+      endY = pointer.y
+
+      if (this.detectSwipe(startX, startY, endX, endY, "down")) {
+        arrow.destroy()
+        this.input.removeListener("pointerdown")
+        this.input.removeListener("pointerup")
+        this.kneadUpAgain()
+      }
+    })
+  }
+
+  kneadUpAgain() {
+    this.currentStepObj.destroy()
+    this.currentStepObj = this.add
+      .image(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2,
+        "dough6"
+      )
+      .setOrigin(0.5, 0.5)
+      .setInteractive()
+
+    this.currentStepObj.setScale(500 / this.currentStepObj.width)
+
+    this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
+    this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
+
+    this.restDough()
+  }
+
+  restDough() {
+    this.showToast(
+      "Bravo! You kneaded that dough like a true pasta master! But listen, even dough needs a little nap. If you try to roll it out now, it will fight back like a stubborn mule!"
+    )
+  }
+
+  detectSwipe(startX, startY, endX, endY, direction) {
+    let deltaX = endX - startX
+    let deltaY = endY - startY
+    let swipeThreshold = 50
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (Math.abs(deltaX) > swipeThreshold) {
+        if (deltaX > 0) {
+          console.log("Swiped Right ➡️")
+          return direction === "right"
+        } else {
+          console.log("Swiped Left ⬅️")
+          return direction === "left"
+        }
+      }
+    } else {
+      if (Math.abs(deltaY) > swipeThreshold) {
+        if (deltaY > 0) {
+          console.log("Swiped Down ⬇️")
+          return direction === "down"
+        } else {
+          console.log("Swiped Up ⬆️")
+          return direction === "up"
+        }
+      }
+    }
   }
 
   handleFifthStep() {
@@ -804,27 +1103,5 @@ export class Level1 extends Phaser.Scene {
       })
       this.dialogue.play({ volume: 10 })
     }
-
-    // this.tweens.add({
-    //   targets: toastGroup.getChildren(),
-    //   y: "-=0",
-    //   alpha: { from: 0, to: 1 },
-    //   duration: 300,
-    //   ease: "Power2",
-    //   onComplete: () => {
-    //     this.time.delayedCall(duration, () => {
-    //       this.tweens.add({
-    //         targets: toastGroup.getChildren(),
-    //         y: "+=0",
-    //         alpha: 0,
-    //         duration: 300,
-    //         ease: "Power2",
-    //         onComplete: () => {
-    //           toastGroup.destroy(true)
-    //         },
-    //       })
-    //     })
-    //   },
-    // })
   }
 }
