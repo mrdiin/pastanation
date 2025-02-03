@@ -33,6 +33,11 @@ export class Level1 extends Phaser.Scene {
     this.load.image("slice3", "assets/sliced-dough/3.png")
     this.load.image("slice4", "assets/sliced-dough/4.png")
     this.load.image("toastBg", "assets/level-1/toast-bg.png")
+    this.load.image("crackedEggs1", "assets/level-1/cracked-eggs-1.png")
+    this.load.image("crackedEggs2", "assets/level-1/cracked-eggs-2.png")
+    this.load.image("crackedEggs3", "assets/level-1/cracked-eggs-3.png")
+    this.load.image("crackedEggs4", "assets/level-1/cracked-eggs-4.png")
+    this.load.image("crackedEggs5", "assets/level-1/cracked-eggs-5.png")
 
     this.load.spritesheet("kneading", "assets/kneading-sprites/sprite.png", {
       frameWidth: 1000,
@@ -253,6 +258,7 @@ export class Level1 extends Phaser.Scene {
               yoyo: false,
               repeat: 0,
             })
+            this.input.setDraggable(this.items.flourJar, false)
           },
         })
 
@@ -317,7 +323,6 @@ export class Level1 extends Phaser.Scene {
 
       if (clicks === 3) {
         graphics.clear()
-
         circleHitArea.destroy()
         this.crackEggs()
       }
@@ -411,26 +416,16 @@ export class Level1 extends Phaser.Scene {
             egg.destroy()
             eggOutline.destroy()
 
-            this.currentStepObj.destroy()
             if (eggsCracked === 0) {
-              this.currentStepObj = this.add
+              this.crackedEggs = this.add
                 .image(
                   this.cameras.main.width / 2,
                   this.cameras.main.height / 2,
-                  "flourEggOne"
+                  "crackedEggs1"
                 )
                 .setOrigin(0.5, 0.5)
                 .setInteractive()
-              this.currentStepObj.setScale(500 / this.currentStepObj.width)
-              this.currentStepObj.preFX.addShadow(
-                0,
-                0,
-                0.1,
-                1,
-                "0x000000",
-                6,
-                0.5
-              )
+              this.crackedEggs.setScale(500 / this.crackedEggs.width)
               eggsCracked++
               eggOutline = this.add
                 .image(
@@ -451,25 +446,16 @@ export class Level1 extends Phaser.Scene {
               })
             } else {
               eggOutline.destroy()
-              this.currentStepObj.destroy()
-              this.currentStepObj = this.add
+              this.crackedEggs.destroy()
+              this.crackedEggs = this.add
                 .image(
                   this.cameras.main.width / 2,
                   this.cameras.main.height / 2,
-                  "flourEggTwo"
+                  "crackedEggs2"
                 )
                 .setOrigin(0.5, 0.5)
                 .setInteractive()
-              this.currentStepObj.setScale(500 / this.currentStepObj.width)
-              this.currentStepObj.preFX.addShadow(
-                0,
-                0,
-                0.1,
-                1,
-                "0x000000",
-                6,
-                0.5
-              )
+              this.crackedEggs.setScale(500 / this.crackedEggs.width)
               this.addSparkle(
                 this.cameras.main.width / 2,
                 this.cameras.main.height / 2
@@ -493,28 +479,10 @@ export class Level1 extends Phaser.Scene {
   }
 
   whiskEggs() {
-    this.well.destroy()
     this.showToast(
       "Ah, look at that—beautiful! Now, use your fork to gently mix the eggs.",
       "step-4"
     )
-    const spiral = this.add
-      .image(
-        this.cameras.main.width / 2,
-        this.cameras.main.height / 2,
-        "spiral"
-      )
-      .setOrigin(0.5, 0.5)
-      .setScale(0.1)
-      .setAlpha(0.1)
-
-    this.tweens.add({
-      targets: spiral,
-      angle: 360,
-      duration: 3000,
-      ease: "Linear",
-      repeat: -1,
-    })
 
     const fork = this.items["fork"]
     const { x, y } = fork
@@ -523,11 +491,11 @@ export class Level1 extends Phaser.Scene {
 
     let lastX = null
     let whiskCount = 0
+    let stage = 3
     let whiskingComplete = false
 
     fork.on("dragstart", (pointer) => {
       if (whiskingComplete) return
-      this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
     })
 
     fork.on("drag", (pointer, dragX, dragY) => {
@@ -535,11 +503,30 @@ export class Level1 extends Phaser.Scene {
       fork.x = dragX
       fork.y = dragY
 
+      this.tweens.add({
+        targets: this.crackedEggs,
+        angle: 360,
+        duration: 1000,
+        ease: "Linear",
+        repeat: 0,
+      })
+
       if (lastX !== null) {
         if (Math.abs(dragX - lastX) > 100) {
           whiskCount++
           lastX = dragX
-          if (whiskCount % 4 === 0 && !whiskingComplete) {
+          if (whiskCount % 7 === 0 && !whiskingComplete) {
+            this.crackedEggs.destroy()
+            this.crackedEggs = this.add
+              .image(
+                this.cameras.main.width / 2,
+                this.cameras.main.height / 2,
+                "crackedEggs" + stage
+              )
+              .setOrigin(0.5, 0.5)
+              .setInteractive()
+            this.crackedEggs.setScale(500 / this.crackedEggs.width)
+            stage++
             this.addSparkle(
               this.cameras.main.width / 2,
               this.cameras.main.height / 2
@@ -550,21 +537,8 @@ export class Level1 extends Phaser.Scene {
         lastX = dragX
       }
 
-      if (whiskCount === 20 && !whiskingComplete) {
+      if (whiskCount === 21 && !whiskingComplete) {
         whiskingComplete = true
-        this.currentStepObj.destroy()
-        this.currentStepObj = this.add
-          .image(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 2,
-            "whiskedEggs"
-          )
-          .setOrigin(0.5, 0.5)
-          .setInteractive()
-        this.currentStepObj.setScale(500 / this.currentStepObj.width)
-
-        this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
-        spiral.destroy()
         this.showToast("Whisking Completed!")
         this.markStepCompleted()
         this.handleFourthStep()
