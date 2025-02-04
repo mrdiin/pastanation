@@ -53,14 +53,20 @@ export class Level1 extends Phaser.Scene {
     this.load.image("rolledDough2", "assets/level-1/rolled-dough-2.png")
     this.load.image("rolledDough3", "assets/level-1/rolled-dough-3.png")
     this.load.image("rolledDough4", "assets/level-1/rolled-dough-4.png")
+    this.load.image("dottedLine", "assets/level-1/dotted-line.png")
+    this.load.image("unfoldedPasta", "assets/level-1/unfolded-pasta.png")
 
     this.load.image("foldedDough1", "assets/level-1/folded-dough-1.png")
     this.load.image("foldedDough2", "assets/level-1/folded-dough-2.png")
 
-    this.load.spritesheet("kneading", "assets/kneading-sprites/sprite.png", {
-      frameWidth: 1000,
-      frameHeight: 1000,
-    })
+    this.load.image("noodle1", "assets/level-1/noodles/1.png")
+    this.load.image("noodle2", "assets/level-1/noodles/2.png")
+    this.load.image("noodle3", "assets/level-1/noodles/3.png")
+    this.load.image("noodle4", "assets/level-1/noodles/4.png")
+    this.load.image("noodle5", "assets/level-1/noodles/5.png")
+    this.load.image("noodle6", "assets/level-1/noodles/6.png")
+    this.load.image("noodle7", "assets/level-1/noodles/7.png")
+    this.load.image("noodle8", "assets/level-1/noodles/8.png")
 
     this.load.spritesheet("flourJar", "assets/level-1/flour-jar.png", {
       frameWidth: 1000,
@@ -89,6 +95,7 @@ export class Level1 extends Phaser.Scene {
     this.load.audio("step-8", "assets/level-1/dialogues/step-8-edited.mp3")
     this.load.audio("step-9", "assets/level-1/dialogues/step-9-edited.mp3")
     this.load.audio("step-10", "assets/level-1/dialogues/step-10-edited.mp3")
+    this.load.audio("step-11", "assets/level-1/dialogues/step-11-edited.mp3")
   }
 
   create() {
@@ -117,7 +124,7 @@ export class Level1 extends Phaser.Scene {
         .setOrigin(origin.x, origin.y)
         .setInteractive()
         .setDepth(2)
-      item.preFX.addShadow()
+      item.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
       return item
     }
 
@@ -188,7 +195,7 @@ export class Level1 extends Phaser.Scene {
           .setDepth(3)
           .setInteractive()
 
-        egg.preFX.addShadow()
+        egg.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
 
         this.anims.create({
           key: "egg",
@@ -211,7 +218,7 @@ export class Level1 extends Phaser.Scene {
       .setScale(0.8)
       .setDepth(2)
       .setInteractive()
-    this.items.napkin.preFX.addShadow()
+    this.items.napkin.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
 
     this.anims.create({
       key: "napkin",
@@ -231,7 +238,7 @@ export class Level1 extends Phaser.Scene {
       .setScale(0.6)
       .setDepth(2)
       .setInteractive()
-    this.items.flourJar.preFX.addShadow()
+    this.items.flourJar.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
 
     this.anims.create({
       key: "flourJar",
@@ -292,8 +299,9 @@ export class Level1 extends Phaser.Scene {
           repeat: 0,
 
           onComplete: () => {
-            this.markStepCompleted()
-            this.makeWellInFlour()
+            this.time.delayedCall(1000, () => {
+              this.makeWellInFlour()
+            })
             this.items.flourJar.anims.stop()
             this.items.flourJar.setFrame(0)
             this.tweens.add({
@@ -365,13 +373,23 @@ export class Level1 extends Phaser.Scene {
         .setInteractive()
 
       this.well.setScale(widths[clicks] / this.well.width)
+      this.tweens.add({
+        targets: this.well,
+        scale: {
+          from: clicks > 0 ? widths[clicks - 1] / this.well.width : 0,
+          to: widths[clicks] / this.well.width,
+        },
+        duration: 500,
+      })
       this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
       clicks++
 
       if (clicks === 3) {
         graphics.clear()
         circleHitArea.destroy()
-        this.crackEggs()
+        this.time.delayedCall(1000, () => {
+          this.crackEggs()
+        })
       }
     })
   }
@@ -385,7 +403,7 @@ export class Level1 extends Phaser.Scene {
       )
       .setOrigin(0.5, 0.5)
     this.choppingBoard.setScale(650 / this.choppingBoard.width)
-    this.choppingBoard.preFX.addShadow()
+    this.choppingBoard.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
   }
 
   setInstructions() {
@@ -397,7 +415,7 @@ export class Level1 extends Phaser.Scene {
       )
       .setOrigin(0, 0.5)
     this.nonna.setScale(700 / this.nonna.width)
-    this.nonna.preFX.addShadow()
+    this.nonna.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
   }
 
   setBg() {
@@ -455,8 +473,7 @@ export class Level1 extends Phaser.Scene {
           Phaser.Geom.Intersects.RectangleToRectangle(
             object1Bounds,
             object2Bounds
-          ) &&
-          this.currentStep === 1
+          )
         ) {
           egg.play("egg")
           egg.on("animationcomplete", () => {
@@ -507,8 +524,9 @@ export class Level1 extends Phaser.Scene {
                 this.cameras.main.width / 2,
                 this.cameras.main.height / 2
               )
-              this.markStepCompleted()
-              this.whiskEggs()
+              this.time.delayedCall(2000, () => {
+                this.whiskEggs()
+              })
             }
           })
         } else {
@@ -596,7 +614,10 @@ export class Level1 extends Phaser.Scene {
       if (whiskCount === 21 && !whiskingComplete) {
         whiskingComplete = true
         this.markStepCompleted()
-        this.kneadDough()
+        this.input.setDraggable(fork, false)
+        this.time.delayedCall(2000, () => {
+          this.kneadDough()
+        })
       }
     })
 
@@ -632,9 +653,16 @@ export class Level1 extends Phaser.Scene {
           this.cameras.main.height / 2,
           "arrow"
         )
+        .setAlpha(0)
         .setOrigin(0.5, 0.5)
         .setInteractive()
       arrow.setScale(300 / arrow.width)
+      this.tweens.add({
+        targets: arrow,
+        alpha: 1,
+        duration: 1000,
+        ease: "Power2",
+      })
       arrows.add(arrow)
     }
 
@@ -687,7 +715,6 @@ export class Level1 extends Phaser.Scene {
     this.currentStepObj.setScale(500 / this.currentStepObj.width)
 
     this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
-
     const arrows = this.add.group()
     const coords = [-100, 0, 100]
     for (let c of coords) {
@@ -698,9 +725,16 @@ export class Level1 extends Phaser.Scene {
           "arrow"
         )
         .setAngle(-90)
+        .setAlpha(0)
         .setOrigin(0.5, 0.5)
         .setInteractive()
       arrow.setScale(300 / arrow.width)
+      this.tweens.add({
+        targets: arrow,
+        alpha: 1,
+        duration: 1000,
+        ease: "Power2",
+      })
       arrows.add(arrow)
     }
 
@@ -751,6 +785,7 @@ export class Level1 extends Phaser.Scene {
     this.currentStepObj.setScale(500 / this.currentStepObj.width)
 
     this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
+
     this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
     const arrow = this.add
       .image(
@@ -759,9 +794,16 @@ export class Level1 extends Phaser.Scene {
         "clockwiseArrow"
       )
       .setAngle(-90)
+      .setAlpha(0)
       .setOrigin(0.5, 0.5)
       .setInteractive()
     arrow.setScale(300 / arrow.width)
+    this.tweens.add({
+      targets: arrow,
+      alpha: 1,
+      duration: 1000,
+      ease: "Power2",
+    })
 
     let startX, startY, endX, endY
 
@@ -805,10 +847,16 @@ export class Level1 extends Phaser.Scene {
         "antiClockwiseArrow"
       )
       .setAngle(-90)
+      .setAlpha(0)
       .setOrigin(0.5, 0.5)
       .setInteractive()
     arrow.setScale(300 / arrow.width)
-
+    this.tweens.add({
+      targets: arrow,
+      alpha: 1,
+      duration: 1000,
+      ease: "Power2",
+    })
     let startX, startY, endX, endY
 
     this.input.on("pointerdown", (pointer) => {
@@ -850,8 +898,14 @@ export class Level1 extends Phaser.Scene {
       .setOrigin(0.5, 0.5)
       .setAngle(-180)
       .setInteractive()
+      .setAlpha(0)
     arrow.setScale(300 / arrow.width)
-
+    this.tweens.add({
+      targets: arrow,
+      alpha: 1,
+      duration: 1000,
+      ease: "Power2",
+    })
     let startX, startY, endX, endY
 
     this.input.on("pointerdown", (pointer) => {
@@ -891,8 +945,14 @@ export class Level1 extends Phaser.Scene {
       .image(this.cameras.main.width / 2, this.cameras.main.height / 2, "arrow")
       .setOrigin(0.5, 0.5)
       .setInteractive()
+      .setAlpha(0)
     arrow.setScale(300 / arrow.width)
-
+    this.tweens.add({
+      targets: arrow,
+      alpha: 1,
+      duration: 1000,
+      ease: "Power2",
+    })
     let startX, startY, endX, endY
 
     this.input.on("pointerdown", (pointer) => {
@@ -1064,6 +1124,15 @@ export class Level1 extends Phaser.Scene {
               .setAlpha(0)
               .setInteractive()
             this.currentStepObj.setScale(500 / this.currentStepObj.width)
+            this.currentStepObj.preFX.addShadow(
+              0,
+              0,
+              0.1,
+              1,
+              "0x000000",
+              6,
+              0.5
+            )
             this.tweens.add({
               targets: this.currentStepObj,
               alpha: 1,
@@ -1213,63 +1282,28 @@ export class Level1 extends Phaser.Scene {
       "At last, take your knife and cut beautiful, even strips.",
       "step-10"
     )
-  }
 
-  detectSwipe(startX, startY, endX, endY, direction) {
-    let deltaX = endX - startX
-    let deltaY = endY - startY
-    let swipeThreshold = 50
-
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      if (Math.abs(deltaX) > swipeThreshold) {
-        if (deltaX > 0) {
-          return direction === "right"
-        } else {
-          return direction === "left"
-        }
-      }
-    } else {
-      if (Math.abs(deltaY) > swipeThreshold) {
-        if (deltaY > 0) {
-          return direction === "down"
-        } else {
-          return direction === "up"
-        }
-      }
+    const guides = this.add.group()
+    const coords = [-110, -70, -30, 10, 50, 90, 130]
+    for (let c of coords) {
+      const guide = this.add
+        .image(
+          this.cameras.main.width / 2 + c,
+          this.cameras.main.height / 2,
+          "dottedLine"
+        )
+        .setOrigin(0.5, 0.5)
+        .setInteractive()
+      guide.setScale(300 / guide.width)
+      guides.add(guide)
     }
-  }
 
-  handleFifthStep() {
-    this.handleSixthStep()
-  }
-
-  handleSixthStep() {
     let cuts = []
     const { x, y } = this.items.knife
 
-    // Draw cutting guides
     const graphics = this.add.graphics()
 
     graphics.lineStyle(10, 0xffffff, 0.5)
-
-    graphics.beginPath()
-    graphics.moveTo(
-      this.cameras.main.width / 2 - 200,
-      this.cameras.main.height / 2
-    )
-    graphics.lineTo(
-      this.cameras.main.width / 2 + 200,
-      this.cameras.main.height / 2
-    )
-    graphics.moveTo(
-      this.cameras.main.width / 2,
-      this.cameras.main.height / 2 - 200
-    )
-    graphics.lineTo(
-      this.cameras.main.width / 2,
-      this.cameras.main.height / 2 + 200
-    )
-    graphics.strokePath()
 
     let cuttingLine = this.add.graphics({
       lineStyle: { width: 4, color: 0xff0000 },
@@ -1283,7 +1317,6 @@ export class Level1 extends Phaser.Scene {
       lastPointerPosition = { x: pointer.x, y: pointer.y }
     })
 
-    // Handle pointer move (draw cutting line)
     this.input.on("pointermove", (pointer) => {
       if (!isCutting) return
 
@@ -1318,48 +1351,55 @@ export class Level1 extends Phaser.Scene {
 
     this.input.on("pointerup", () => {
       isCutting = false
+      this.tweens.add({
+        targets: this.items.knife,
+        x,
+        y,
+        duration: 500,
+        ease: "Power2",
+      })
       lastPointerPosition = null
       cuts.push(cuttingLine)
-      if (cuts.length === 2) {
-        this.showToast("Cutting Completed!")
-        this.markStepCompleted()
-        this.handleSeventhStep()
-        cuts[0].destroy()
-        cuts[1].destroy()
+      if (cuts.length === 7) {
+        guides.clear(true, true)
+        for (const c of cuts) {
+          c.clear()
+        }
         graphics.destroy()
         this.currentStepObj.destroy()
-        for (let i = 0; i < 4; i++) {
-          this.currentStepObj = this.add.group()
-          const slice = this.add.image(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 2,
-            "slice" + (i + 1)
-          )
-          slice.setOrigin(0.5, 0.5)
-          slice.setScale(400 / slice.width)
-          this.currentStepObj.add(slice)
-          this.tweens.add({
-            targets: slice,
-            x: this.cameras.main.width / 2 + (i === 0 || i === 3 ? -20 : 40),
-            y: this.cameras.main.height / 2 + (i === 0 || i === 1 ? -20 : 40),
-            duration: 500,
-            ease: "Power2",
-          })
-          this.items.knife.setOrigin(0.5, 0.5)
-          this.tweens.add({
-            targets: this.items.knife,
-            x,
-            y,
-            duration: 500,
-            ease: "Power2",
-          })
-          this.markStepCompleted()
-          this.addSparkle(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 2
-          )
-        }
+        this.currentStepObj = this.add.group()
 
+        for (let i = 1; i < 9; i++) {
+          const noodle = this.add
+            .image(
+              this.cameras.main.width / 2,
+              this.cameras.main.height / 2,
+              "noodle" + i
+            )
+            .setOrigin(0.5, 0.5)
+            .setInteractive()
+          noodle.setScale(500 / noodle.width)
+          noodle.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
+          const dist = [-70, -50, -30, -10, 10, 30, 50, 70]
+          this.tweens.add({
+            targets: noodle,
+            x: noodle.x + dist[i - 1],
+            duration: 500,
+            ease: "Power2",
+          })
+          this.currentStepObj.add(noodle)
+        }
+        // this.tweens.add({
+        //   targets: knife,
+        //   x,
+        //   y,
+        //   duration: 500,
+        //   ease: "Power2",
+        // })
+        this.input.removeListener("pointerdown")
+        this.input.removeListener("pointerup")
+        this.input.removeListener("pointermove")
+        this.unfoldPasta()
         return
       }
       cuttingLine = this.add.graphics({
@@ -1367,16 +1407,96 @@ export class Level1 extends Phaser.Scene {
       })
       this.currentStepObj.clearTint()
       this.items.knife.setOrigin(0.5, 0.5)
-      this.tweens.add({
-        targets: this.items.knife,
-        y,
-        duration: 500,
-        ease: "Power2",
-      })
     })
   }
 
-  handleSeventhStep() {}
+  unfoldPasta() {
+    this.showToast(
+      "Unfold those strips and look! That’s your fettuccine! It’s like little ribbons of happiness. If they’re a bit uneven, we call it ‘rustic,’ eh?",
+      "step-11"
+    )
+
+    const arrow = this.add
+      .image(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2 + 400,
+        "arrow"
+      )
+      .setOrigin(0.5, 0.5)
+      .setAngle(-90)
+      .setInteractive()
+    arrow.setScale(300 / arrow.width)
+    let startX, startY, endX, endY
+    this.input.on("pointerdown", (pointer) => {
+      startX = pointer.x
+      startY = pointer.y
+    })
+
+    this.input.on("pointerup", (pointer) => {
+      endX = pointer.x
+      endY = pointer.y
+
+      if (this.detectSwipe(startX, startY, endX, endY, "right")) {
+        arrow.destroy()
+        this.input.removeListener("pointerdown")
+        this.input.removeListener("pointerup")
+        this.currentStepObj.clear(true, true)
+        this.currentStepObj = this.add
+          .image(
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2,
+            "unfoldedPasta"
+          )
+          .setAlpha(0)
+          .setOrigin(0.5, 0.5)
+          .setInteractive()
+
+        this.currentStepObj.setScale(500 / this.currentStepObj.width)
+
+        this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
+        this.tweens.add({
+          targets: this.currentStepObj,
+          alpha: 1,
+          duration: 500,
+          ease: "Power2",
+          onComplete: () => {
+            this.time.delayedCall(5000, () => {
+              this.scene.start("Level1Outro")
+            })
+          },
+        })
+
+        this.addSparkle(
+          this.cameras.main.width / 2,
+          this.cameras.main.height / 2
+        )
+      }
+    })
+  }
+
+  detectSwipe(startX, startY, endX, endY, direction) {
+    let deltaX = endX - startX
+    let deltaY = endY - startY
+    let swipeThreshold = 50
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (Math.abs(deltaX) > swipeThreshold) {
+        if (deltaX > 0) {
+          return direction === "right"
+        } else {
+          return direction === "left"
+        }
+      }
+    } else {
+      if (Math.abs(deltaY) > swipeThreshold) {
+        if (deltaY > 0) {
+          return direction === "down"
+        } else {
+          return direction === "up"
+        }
+      }
+    }
+  }
 
   addSparkle(x, y, duration = 1000) {
     const sparkleSound = this.sound.add("sparkle")
