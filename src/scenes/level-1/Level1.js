@@ -49,6 +49,10 @@ export class Level1 extends Phaser.Scene {
     this.load.image("dough4", "assets/level-1/dough-4.png")
     this.load.image("dough5", "assets/level-1/dough-5.png")
     this.load.image("dough6", "assets/level-1/dough-6.png")
+    this.load.image("rolledDough1", "assets/level-1/rolled-dough-1.png")
+    this.load.image("rolledDough2", "assets/level-1/rolled-dough-2.png")
+    this.load.image("rolledDough3", "assets/level-1/rolled-dough-3.png")
+    this.load.image("rolledDough4", "assets/level-1/rolled-dough-4.png")
 
     this.load.spritesheet("kneading", "assets/kneading-sprites/sprite.png", {
       frameWidth: 1000,
@@ -79,6 +83,9 @@ export class Level1 extends Phaser.Scene {
     this.load.audio("step-5", "assets/level-1/dialogues/step-5-edited.mp3")
     this.load.audio("step-6", "assets/level-1/dialogues/step-6-edited.mp3")
     this.load.audio("step-7", "assets/level-1/dialogues/step-7-edited.mp3")
+    this.load.audio("step-8", "assets/level-1/dialogues/step-8-edited.mp3")
+    this.load.audio("step-9", "assets/level-1/dialogues/step-9-edited.mp3")
+    this.load.audio("step-10", "assets/level-1/dialogues/step-10-edited.mp3")
   }
 
   create() {
@@ -536,7 +543,6 @@ export class Level1 extends Phaser.Scene {
     })
 
     fork.on("drag", (pointer, dragX, dragY) => {
-      if (this.currentStep !== 2) return
       fork.x = dragX
       fork.y = dragY
 
@@ -553,16 +559,26 @@ export class Level1 extends Phaser.Scene {
           whiskCount++
           lastX = dragX
           if (whiskCount % 7 === 0 && !whiskingComplete) {
-            this.crackedEggs.destroy()
+            const previousEggs = this.crackedEggs
             this.crackedEggs = this.add
               .image(
                 this.cameras.main.width / 2,
                 this.cameras.main.height / 2,
                 "crackedEggs" + stage
               )
+              .setAlpha(0)
               .setOrigin(0.5, 0.5)
               .setInteractive()
             this.crackedEggs.setScale(500 / this.crackedEggs.width)
+            this.tweens.add({
+              targets: this.crackedEggs,
+              alpha: 1,
+              duration: 500,
+              ease: "Power2",
+            })
+            this.crackedEggs.on("animationComplete", () => {
+              previousEggs.destroy()
+            })
             stage++
             this.addSparkle(
               this.cameras.main.width / 2,
@@ -653,6 +669,8 @@ export class Level1 extends Phaser.Scene {
   }
 
   kneadRight() {
+    this.crackedEggs.destroy()
+    this.well.destroy()
     this.currentStepObj.destroy()
     this.currentStepObj = this.add
       .image(
@@ -1006,8 +1024,81 @@ export class Level1 extends Phaser.Scene {
 
   rollDough() {
     this.showToast(
-      "Now, the real fun begins! Grab your rolling pin. Roll the dough out nice and thin—like a sheet of paper."
+      "Now, the real fun begins! Grab your rolling pin. Roll the dough out nice and thin—like a sheet of paper.",
+      "step-8"
     )
+
+    const rollingPin = this.items.rollingPin
+    const { x, y } = rollingPin
+
+    this.input.setDraggable(rollingPin)
+
+    let lastY = null
+    let dragCount = 0
+    let stage = 1
+    let rollingComplete = false
+
+    rollingPin.on("dragstart", (pointer) => {
+      if (rollingComplete) return
+    })
+
+    rollingPin.on("drag", (pointer, dragX, dragY) => {
+      rollingPin.x = dragX
+      rollingPin.y = dragY
+
+      if (lastY !== null) {
+        if (Math.abs(dragY - lastY) > 200) {
+          dragCount++
+          lastY = dragY
+          if (dragCount % 5 === 0 && !rollingComplete) {
+            const previousDough = this.currentStepObj
+            this.currentStepObj = this.add
+              .image(
+                this.cameras.main.width / 2,
+                this.cameras.main.height / 2,
+                "rolledDough" + stage
+              )
+              .setOrigin(0.5, 0.5)
+              .setAlpha(0)
+              .setInteractive()
+            this.currentStepObj.setScale(500 / this.currentStepObj.width)
+            this.tweens.add({
+              targets: this.currentStepObj,
+              alpha: 1,
+              duration: 500,
+              ease: "Power2",
+            })
+            this.currentStepObj.on("animationComplete", () => {
+              previousDough.destroy()
+            })
+            stage++
+            this.addSparkle(
+              this.cameras.main.width / 2,
+              this.cameras.main.height / 2
+            )
+          }
+        }
+      } else {
+        lastY = dragY
+      }
+
+      if (dragCount === 20 && !rollingComplete) {
+        rollingComplete = true
+        this.markStepCompleted()
+      }
+    })
+
+    rollingPin.on("dragend", () => {
+      lastY = null
+
+      this.tweens.add({
+        targets: rollingPin,
+        x,
+        y,
+        duration: 500,
+        ease: "Power2",
+      })
+    })
   }
 
   detectSwipe(startX, startY, endX, endY, direction) {
@@ -1018,20 +1109,16 @@ export class Level1 extends Phaser.Scene {
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
       if (Math.abs(deltaX) > swipeThreshold) {
         if (deltaX > 0) {
-          console.log("Swiped Right ➡️")
           return direction === "right"
         } else {
-          console.log("Swiped Left ⬅️")
           return direction === "left"
         }
       }
     } else {
       if (Math.abs(deltaY) > swipeThreshold) {
         if (deltaY > 0) {
-          console.log("Swiped Down ⬇️")
           return direction === "down"
         } else {
-          console.log("Swiped Up ⬆️")
           return direction === "up"
         }
       }
