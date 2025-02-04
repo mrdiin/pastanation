@@ -83,7 +83,11 @@ export class Level1 extends Phaser.Scene {
       frameHeight: 540,
     })
 
-    this.load.audio("eggCracking", "assets/sound-effects/cracking-egg.mp3")
+    this.load.audio("eggCracking", "assets/sound-effects/cracking-egg.wav")
+    this.load.audio("whiskSound", "assets/sound-effects/whisk.mp3")
+    this.load.audio("whooshSound", "assets/sound-effects/whoosh.wav")
+    this.load.audio("sliceSound", "assets/sound-effects/slice.wav")
+    this.load.audio("rollingSound", "assets/sound-effects/rolling.mp3")
 
     this.load.audio("step-1", "assets/level-1/dialogues/step-1-edited.mp3")
     this.load.audio("step-2", "assets/level-1/dialogues/step-2-edited.mp3")
@@ -563,6 +567,12 @@ export class Level1 extends Phaser.Scene {
       if (whiskingComplete) return
     })
 
+    const whiskSound = this.sound.add("whiskSound")
+
+    fork.on("dragstart", (pointer) => {
+      whiskSound.play({ loop: true, volume: 2 })
+    })
+
     fork.on("drag", (pointer, dragX, dragY) => {
       fork.x = dragX
       fork.y = dragY
@@ -579,7 +589,7 @@ export class Level1 extends Phaser.Scene {
         if (Math.abs(dragX - lastX) > 100) {
           whiskCount++
           lastX = dragX
-          if (whiskCount % 7 === 0 && !whiskingComplete) {
+          if (whiskCount % 14 === 0 && !whiskingComplete) {
             const previousEggs = this.crackedEggs
             this.crackedEggs = this.add
               .image(
@@ -601,18 +611,18 @@ export class Level1 extends Phaser.Scene {
               },
             })
             stage++
-            this.addSparkle(
-              this.cameras.main.width / 2,
-              this.cameras.main.height / 2
-            )
           }
         }
       } else {
         lastX = dragX
       }
 
-      if (whiskCount === 21 && !whiskingComplete) {
+      if (whiskCount === 42 && !whiskingComplete) {
         whiskingComplete = true
+        this.addSparkle(
+          this.cameras.main.width / 2,
+          this.cameras.main.height / 2
+        )
         this.markStepCompleted()
         this.input.setDraggable(fork, false)
         this.time.delayedCall(2000, () => {
@@ -623,6 +633,7 @@ export class Level1 extends Phaser.Scene {
 
     fork.on("dragend", () => {
       lastX = null
+      whiskSound.stop()
 
       this.tweens.add({
         targets: fork,
@@ -1090,6 +1101,8 @@ export class Level1 extends Phaser.Scene {
       "step-8"
     )
 
+    const rollingSound = this.sound.add("rollingSound")
+
     const rollingPin = this.items.rollingPin
     const { x, y } = rollingPin
 
@@ -1102,6 +1115,7 @@ export class Level1 extends Phaser.Scene {
 
     rollingPin.on("dragstart", (pointer) => {
       if (rollingComplete) return
+      rollingSound.play({ loop: true })
     })
 
     rollingPin.on("drag", (pointer, dragX, dragY) => {
@@ -1162,6 +1176,7 @@ export class Level1 extends Phaser.Scene {
 
     rollingPin.on("dragend", () => {
       lastY = null
+      rollingSound.stop()
 
       this.tweens.add({
         targets: rollingPin,
@@ -1311,6 +1326,7 @@ export class Level1 extends Phaser.Scene {
 
     let isCutting = false
     let lastPointerPosition = null
+    const sliceSound = this.sound.add("sliceSound")
 
     this.input.on("pointerdown", (pointer) => {
       isCutting = true
@@ -1360,6 +1376,7 @@ export class Level1 extends Phaser.Scene {
       })
       lastPointerPosition = null
       cuts.push(cuttingLine)
+      sliceSound.play()
       if (cuts.length === 7) {
         guides.clear(true, true)
         for (const c of cuts) {
@@ -1399,6 +1416,10 @@ export class Level1 extends Phaser.Scene {
         this.input.removeListener("pointerdown")
         this.input.removeListener("pointerup")
         this.input.removeListener("pointermove")
+        this.addSparkle(
+          this.cameras.main.width / 2,
+          this.cameras.main.height / 2
+        )
         this.unfoldPasta()
         return
       }
@@ -1478,9 +1499,11 @@ export class Level1 extends Phaser.Scene {
     let deltaX = endX - startX
     let deltaY = endY - startY
     let swipeThreshold = 50
+    const whoosh = this.sound.add("whooshSound")
 
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
       if (Math.abs(deltaX) > swipeThreshold) {
+        whoosh.play({ volume: 3 })
         if (deltaX > 0) {
           return direction === "right"
         } else {
@@ -1489,6 +1512,7 @@ export class Level1 extends Phaser.Scene {
       }
     } else {
       if (Math.abs(deltaY) > swipeThreshold) {
+        whoosh.play({ volume: 3 })
         if (deltaY > 0) {
           return direction === "down"
         } else {
