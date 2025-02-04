@@ -54,6 +54,9 @@ export class Level1 extends Phaser.Scene {
     this.load.image("rolledDough3", "assets/level-1/rolled-dough-3.png")
     this.load.image("rolledDough4", "assets/level-1/rolled-dough-4.png")
 
+    this.load.image("foldedDough1", "assets/level-1/folded-dough-1.png")
+    this.load.image("foldedDough2", "assets/level-1/folded-dough-2.png")
+
     this.load.spritesheet("kneading", "assets/kneading-sprites/sprite.png", {
       frameWidth: 1000,
       frameHeight: 1000,
@@ -575,9 +578,9 @@ export class Level1 extends Phaser.Scene {
               alpha: 1,
               duration: 500,
               ease: "Power2",
-            })
-            this.crackedEggs.on("animationComplete", () => {
-              previousEggs.destroy()
+              onComplete: () => {
+                previousEggs.destroy()
+              },
             })
             stage++
             this.addSparkle(
@@ -925,7 +928,6 @@ export class Level1 extends Phaser.Scene {
 
     this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
     this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
-
     this.restDough()
   }
 
@@ -1067,9 +1069,9 @@ export class Level1 extends Phaser.Scene {
               alpha: 1,
               duration: 500,
               ease: "Power2",
-            })
-            this.currentStepObj.on("animationComplete", () => {
-              previousDough.destroy()
+              onComplete: () => {
+                previousDough.destroy()
+              },
             })
             stage++
             this.addSparkle(
@@ -1084,7 +1086,8 @@ export class Level1 extends Phaser.Scene {
 
       if (dragCount === 20 && !rollingComplete) {
         rollingComplete = true
-        this.markStepCompleted()
+        this.foldDough()
+        this.input.setDraggable(rollingPin, false)
       }
     })
 
@@ -1099,6 +1102,117 @@ export class Level1 extends Phaser.Scene {
         ease: "Power2",
       })
     })
+  }
+
+  foldDough() {
+    this.showToast(
+      "Ah, now we make the magic happen! Fold the dough carefully, like a love letter.",
+      "step-9"
+    )
+
+    this.foldDown()
+  }
+
+  foldDown() {
+    const arrow = this.add
+      .image(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2 - 100,
+        "arrow"
+      )
+      .setOrigin(0.5, 0.5)
+      .setInteractive()
+    arrow.setScale(200 / arrow.width)
+
+    let startX, startY, endX, endY
+
+    this.input.on("pointerdown", (pointer) => {
+      startX = pointer.x
+      startY = pointer.y
+    })
+
+    this.input.on("pointerup", (pointer) => {
+      endX = pointer.x
+      endY = pointer.y
+
+      if (this.detectSwipe(startX, startY, endX, endY, "down")) {
+        arrow.destroy()
+        this.input.removeListener("pointerdown")
+        this.input.removeListener("pointerup")
+        this.foldUp()
+      }
+    })
+  }
+
+  foldUp() {
+    this.currentStepObj.destroy()
+    this.currentStepObj = this.add
+      .image(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2,
+        "foldedDough1"
+      )
+      .setOrigin(0.5, 0.5)
+      .setInteractive()
+
+    this.currentStepObj.setScale(500 / this.currentStepObj.width)
+
+    this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
+    this.addSparkle(this.cameras.main.width / 2, this.cameras.main.height / 2)
+    const arrow = this.add
+      .image(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2 + 100,
+        "arrow"
+      )
+      .setOrigin(0.5, 0.5)
+      .setAngle(-180)
+      .setInteractive()
+    arrow.setScale(200 / arrow.width)
+
+    let startX, startY, endX, endY
+
+    this.input.on("pointerdown", (pointer) => {
+      startX = pointer.x
+      startY = pointer.y
+    })
+
+    this.input.on("pointerup", (pointer) => {
+      endX = pointer.x
+      endY = pointer.y
+
+      if (this.detectSwipe(startX, startY, endX, endY, "up")) {
+        arrow.destroy()
+        this.input.removeListener("pointerdown")
+        this.input.removeListener("pointerup")
+        this.currentStepObj.destroy()
+        this.currentStepObj = this.add
+          .image(
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2,
+            "foldedDough2"
+          )
+          .setOrigin(0.5, 0.5)
+          .setInteractive()
+
+        this.currentStepObj.setScale(500 / this.currentStepObj.width)
+
+        this.currentStepObj.preFX.addShadow(0, 0, 0.1, 1, "0x000000", 6, 0.5)
+        this.addSparkle(
+          this.cameras.main.width / 2,
+          this.cameras.main.height / 2
+        )
+
+        this.cutRibbons()
+      }
+    })
+  }
+
+  cutRibbons() {
+    this.showToast(
+      "At last, take your knife and cut beautiful, even strips.",
+      "step-10"
+    )
   }
 
   detectSwipe(startX, startY, endX, endY, direction) {
